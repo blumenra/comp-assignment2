@@ -16,7 +16,8 @@
             (parseBegin sexp)
             (parseLet sexp)
             (parseLet* sexp)
-            
+            (parseAnd sexp)
+            (parseCond sexp)
             )))
 
 (define parseLambda
@@ -52,6 +53,15 @@
     (lambda (sexp)
             (cadr (evalLet* sexp))))
             
+            
+(define parseAnd
+    (lambda (sexp)
+        (if (list? sexp) (cadr (evalAnd sexp)) #f)))
+        
+(define parseCond
+    (lambda (sexp)
+        (if (list? sexp) (cadr (evalCond sexp)) #f)))
+        
 (define flatten 
     (lambda (x)
         (cond ((null? x) '())
@@ -222,19 +232,42 @@
             (let*
                 ((bindings (cadr s))
                 (body (cddr s)))
-                (newline)
                 (cond
                     ((null? bindings)
                         `(#t ,(parse `(let () (begin ,@body)))))
                     ((= 1 (length bindings))
-                    
                         `(#t ,(parse `(let (,(car bindings)) (begin ,@body)))))
                     (else 
                         `(#t ,(parse `(let (,(car bindings)) (let* ,(cdr bindings) ,@body))))))))))
-        ;))))
+
+(define evalAnd
+    (lambda (s)
+        (if (not (and (list? s) (equal? (car s) 'and)))
+            '(#f #f)
+            (let* 
+                ((args (cdr s)))
+                (cond 
+                    ((= 0 (length args)) `(#t ,(parse #t)))
+                    ((= 1 (length args)) `(#t ,(parse (car args))))
+                    (else 
+                    `(#t ,(parse `(if ,(cadr s) (and ,@(cdr args)) #f)))))))))              
                 
-                
-                
+(define evalCond
+    (lambda (s)
+        (if (not (and (list? s) (equal? (car s) 'cond)))
+            '(#f #f)
+            (let* 
+                ((args (cdr s))
+                (test (caar args))
+                (dit (cdar args)))
+                (if 
+                    (= 1 (length args))
+                    (if (not (eq? test 'else))
+                        `(#t ,(parse `(if ,test (begin ,@dit) ,(void))))
+                        `(#t ,(parse `(begin ,@dit))))
+                     
+                    `(#t ,(parse `(if ,test (begin ,@dit) (cond ,@(cdr args))))))))))           
+                     
                 
                 
                 
