@@ -16,6 +16,7 @@
             (parseBegin sexp)
             (parseLet sexp)
             (parseLet* sexp)
+            (parseQuasiquote sexp)
             
             )))
 
@@ -52,6 +53,12 @@
     (lambda (sexp)
             (cadr (evalLet* sexp))))
             
+(define parseQuasiquote
+    (lambda (sexp)
+            (cadr (evalQuasiquote sexp))))
+
+
+
 (define flatten 
     (lambda (x)
         (cond ((null? x) '())
@@ -232,8 +239,14 @@
                     (else 
                         `(#t ,(parse `(let (,(car bindings)) (let* ,(cdr bindings) ,@body))))))))))
         ;))))
-                
-                
+            
+(define evalQuasiquote
+    (lambda (s)
+       (if (not (and (list? s) (equal? (car s) 'quasiquote)))
+            '(#f #f)
+            `(#t ,(parse (expand-qq (cadr s)))))))
+
+
                 
                 
                 
