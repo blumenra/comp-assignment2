@@ -14,15 +14,20 @@
     (lambda (sexp)
         (or
             (parser eval-variadic-lambda sexp 'lambda-opt)
-            ;(parser eval-simple-lambda sexp 'lambda-simple)
-            ;(parser eval-optional-args sexp 'lambda-opt)
+            (parser eval-simple-lambda sexp 'lambda-simple)
+            (parser eval-optional-args sexp 'lambda-opt)
             )))
             
 (define parseConst
     (lambda (sexp)
         (parser evalConst sexp 'const)))
     
-            
+(define flatten 
+    (lambda (x)
+        (cond ((null? x) '())
+                ((pair? x) (append (flatten (car x)) (flatten (cdr x))))
+                (else (list x)))))
+                
 (define parser
    (lambda (evaluator sexp tag) 
      (let* ((lst (evaluator sexp))
@@ -87,6 +92,51 @@
                     (not (symbol? args))
                     '(#f #f)
                     `(#t () args ,(parse `(begin ,@exps))))))))
-        
-        
-        
+
+(define eval-simple-lambda
+    (lambda (s)
+       (if (not (and (list? s) (equal? (car s) 'lambda)))
+            '(#f #f)
+            (if (not (list? (cadr s)))
+                '(#f #f)
+                (let
+                    ((args (cadr s))
+                    (exps (cddr s)))
+                    `(#t ,args ,@(map parse exps)))))))
+
+(define eval-optional-args
+     (lambda (s)
+       (if (not (and (list? s) (equal? (car s) 'lambda)))
+            '(#f #f)
+            (if (not (pair? (cadr s))) 
+                '(#f #f)
+                (let*
+                    ((args (cadr s))
+                    (exps (cddr s))
+                    (reversed-list (reverse (flatten args)))
+                    (rest (car reversed-list))
+                    (proper-args (reverse (cdr reversed-list))))
+                    `(#t ,proper-args ,rest ,(parse `(begin ,@exps))))))))
+                        
+
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
