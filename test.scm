@@ -8,6 +8,9 @@
 (load "tag-parser.scm")
 (load "tagparser.so")
 
+(define failures-count 0)
+(define tests-count 0)
+
 (define my-parse-func parse-2)
 (define staff-parse-func parse)
 
