@@ -7,8 +7,9 @@
             (parseConst sexp)
             (parser evalVar sexp 'var)
             (parser evalIf sexp 'if3)
-            (parser evalOr sexp 'or)
+            (parseOr sexp)
             (parseLambda sexp)
+            ;(parser evalDefine sexp 'def)
             (parser evalDefine sexp 'define)
             (parser evalAssignment sexp 'set)
             (parser evalApplic sexp 'applic)
@@ -19,6 +20,7 @@
     (lambda (sexp)
         (or
             (parser eval-variadic-lambda sexp 'lambda-opt)
+            ;(parser eval-variadic-lambda sexp 'lambda-var)
             (parser eval-simple-lambda sexp 'lambda-simple)
             (parser eval-optional-args sexp 'lambda-opt)
             )))
@@ -26,7 +28,13 @@
 (define parseConst
     (lambda (sexp)
         (parser evalConst sexp 'const)))
-
+        
+(define parseOr
+    (lambda (sexp)
+        (if (and (list? sexp) (< (length sexp) 3))
+            (cadr (evalOr sexp))
+            (parser evalOr sexp 'or))))
+            
 (define parseBegin
     (lambda (sexp)
         (if (and (list? sexp) (= 2 (length sexp)))
@@ -88,9 +96,12 @@
     (lambda (s)
         (if (not (and (list? s) (equal? (car s) 'or)))
             '(#f #f)
-            (if (= 1 (length s)) 
-                `(#t ,(parse #f))
-                `(#t ,(map parse (cdr s)))))))
+            (let* 
+                ((args (cdr s)))
+                (cond 
+                    ((= 0 (length args)) `(#t ,(parse #f)))
+                    ((= 1 (length args)) `(#t ,(parse (car args))))
+                    (else `(#t ,(map parse (cdr s)))))))))
                 
 (define eval-variadic-lambda
     (lambda (s)
@@ -113,7 +124,7 @@
                 (let
                     ((args (cadr s))
                     (exps (cddr s)))
-                    `(#t ,args ,@(map parse exps)))))))
+                    `(#t ,args ,(parse `(begin ,@exps))))))))
 
 (define eval-optional-args
      (lambda (s)
