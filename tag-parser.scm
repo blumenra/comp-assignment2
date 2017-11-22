@@ -1,5 +1,7 @@
 (load "qq.scm")
 
+(define parse-2 parse)
+
 (define parse
     (lambda (sexp)
         (or
