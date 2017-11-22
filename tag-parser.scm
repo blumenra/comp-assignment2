@@ -14,6 +14,9 @@
             (parser evalAssignment sexp 'set)
             (parser evalApplic sexp 'applic)
             (parseBegin sexp)
+            (parseLet sexp)
+            (parseLet* sexp)
+            
             )))
 
 (define parseLambda
@@ -40,7 +43,15 @@
         (if (and (list? sexp) (= 2 (length sexp)))
             (cadr (evalBegin sexp))
             (parser evalBegin sexp 'seq))))
-        
+
+(define parseLet
+    (lambda (sexp)
+            (cadr (evalLet sexp))))
+
+(define parseLet*
+    (lambda (sexp)
+            (cadr (evalLet* sexp))))
+            
 (define flatten 
     (lambda (x)
         (cond ((null? x) '())
@@ -188,10 +199,41 @@
                                 (map parse (cdr s)))))
                 `(#t ,parsed-rest)))))
                 
+(define evalLet
+    (lambda (s)
+       (if (not (and (list? s) (equal? (car s) 'let)))
+            '(#f #f)
+            ((display (cddr s))
+            (let*
+                ((bindings (cadr s))
                 
+                (body (cddr s))
+                (display bindings)
+                (display body)
+                (params (map car bindings))
+                (values (map cadr bindings)))
+                `(#t ,(parse `((lambda ,params ,@body) ,@values))))))))
                 
-                
-                
+(define evalLet*
+    (lambda (s)
+       (if (not (and (list? s) (equal? (car s) 'let*)))
+            '(#f #f)
+            (let*
+                ((bindings (cadr s))
+                (body (cddr s)))
+                ;(newline)
+                ;(display `(bindings ,bindings))
+                ;(newline)
+                ;(display `(body ,@body))
+                ;(newline)
+                ;(display `(bindings-car (,(car bindings))))
+                ;(newline)
+                ;(display `(bindings-cdr ,(cdr bindings)))
+                ;(newline)
+                (if (null? bindings)
+                `(#t ,(car body))
+                `(#t ,(parse `(let (,(car bindings)) '(let* ,(cdr bindings) ,(car body))))))))))
+        ;))))
                 
                 
                 
