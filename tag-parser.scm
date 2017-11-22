@@ -8,6 +8,8 @@
             (parser evalIf sexp 'if3)
             (parser evalOr sexp 'or)
             (parseLambda sexp)
+            (parser evalDefine sexp 'define)
+            (parser evalAssignment sexp 'set)
             )))
 
 (define parseLambda
@@ -118,12 +120,29 @@
                     (proper-args (reverse (cdr reversed-list))))
                     `(#t ,proper-args ,rest ,(parse `(begin ,@exps))))))))
                         
-
+(define evalDefine
+    (lambda (s)
+        (if (not (and (list? s) (equal? (car s) 'define)))
+        '(#f #f)
+        (let*
+            ((name (cadr s))
+            (exps (cddr s)))
+            (cond 
+                ((symbol? name) `(#t (var ,name) ,(parse (car exps))))
+                ((and (pair? name) (not (null? name))) `(#t (var ,(car name)) ,(parse `(lambda ,(cdr name) ,@exps))))
+                (else '(#f #f))
+                )))))
                 
-                
-                
-                
-                
+(define evalAssignment
+    (lambda (s)
+        (if (not (and (list? s) (equal? (car s) 'set!)))
+            '(#f #f)
+            (let*
+                ((name (cadr s))
+                (exps (cddr s)))
+                (if (symbol? name) 
+                    `(#t (var ,name) ,(parse (car exps)))
+                    '(#f #f))))))                
                 
                 
                 
