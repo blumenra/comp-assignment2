@@ -13,6 +13,7 @@
             (parser evalDefine sexp 'define)
             (parser evalAssignment sexp 'set)
             (parser evalApplic sexp 'applic)
+            (parseBegin sexp)
             )))
 
 (define parseLambda
@@ -26,7 +27,13 @@
 (define parseConst
     (lambda (sexp)
         (parser evalConst sexp 'const)))
-    
+
+(define parseBegin
+    (lambda (sexp)
+        (if (and (list? sexp) (= 2 (length sexp)))
+            (cadr (evalBegin sexp))
+            (parser evalBegin sexp 'seq))))
+        
 (define flatten 
     (lambda (x)
         (cond ((null? x) '())
@@ -159,7 +166,17 @@
                                 (map parse rest))))
                 `(#t ,(parse first) ,parsed-rest)))))
 
-                
+(define evalBegin
+    (lambda (s)
+        (if (not (and (list? s) (equal? (car s) 'begin)))
+            '(#f #f)
+            (let*
+                ((first (cadr s))
+                (rest (cddr s))
+                (parsed-rest (if (null? rest) 
+                                (parse first) 
+                                (map parse (cdr s)))))
+                `(#t ,parsed-rest)))))
                 
                 
                 
