@@ -40,7 +40,7 @@
             
 (define parseBegin
     (lambda (sexp)
-        (if (and (list? sexp) (= 2 (length sexp)))
+        (if (and (list? sexp) (> 3 (length sexp)))
             (cadr (evalBegin sexp))
             (parser evalBegin sexp 'seq))))
 
@@ -191,19 +191,20 @@
     (lambda (s)
         (if (not (and (list? s) (equal? (car s) 'begin)))
             '(#f #f)
-            (let*
-                ((first (cadr s))
-                (rest (cddr s))
-                (parsed-rest (if (null? rest) 
-                                (parse first) 
-                                (map parse (cdr s)))))
-                `(#t ,parsed-rest)))))
+            (if (null? (cdr s))
+                `(#t ,(parse (void)))
+                (let*
+                    ((first (cadr s))
+                    (rest (cddr s))
+                    (parsed-rest (if (null? rest) 
+                                    (parse first) 
+                                    (map parse (cdr s)))))
+                    `(#t ,parsed-rest))))))
                 
 (define evalLet
     (lambda (s)
        (if (not (and (list? s) (equal? (car s) 'let)))
             '(#f #f)
-            ((display (cddr s))
             (let*
                 ((bindings (cadr s))
                 
@@ -212,7 +213,7 @@
                 (display body)
                 (params (map car bindings))
                 (values (map cadr bindings)))
-                `(#t ,(parse `((lambda ,params ,@body) ,@values))))))))
+                `(#t ,(parse `((lambda ,params ,@body) ,@values)))))))
                 
 (define evalLet*
     (lambda (s)
@@ -221,18 +222,15 @@
             (let*
                 ((bindings (cadr s))
                 (body (cddr s)))
-                ;(newline)
-                ;(display `(bindings ,bindings))
-                ;(newline)
-                ;(display `(body ,@body))
-                ;(newline)
-                ;(display `(bindings-car (,(car bindings))))
-                ;(newline)
-                ;(display `(bindings-cdr ,(cdr bindings)))
-                ;(newline)
-                (if (null? bindings)
-                `(#t ,(car body))
-                `(#t ,(parse `(let (,(car bindings)) '(let* ,(cdr bindings) ,(car body))))))))))
+                (newline)
+                (cond
+                    ((null? bindings)
+                        `(#t ,(parse `(let () (begin ,@body)))))
+                    ((= 1 (length bindings))
+                    
+                        `(#t ,(parse `(let (,(car bindings)) (begin ,@body)))))
+                    (else 
+                        `(#t ,(parse `(let (,(car bindings)) (let* ,(cdr bindings) ,@body))))))))))
         ;))))
                 
                 
