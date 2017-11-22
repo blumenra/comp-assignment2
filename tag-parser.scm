@@ -16,6 +16,7 @@
             (parseBegin sexp)
             (parseLet sexp)
             (parseLet* sexp)
+            (parseLetrec sexp)
             (parseQuasiquote sexp)
             (parseAnd sexp)
             (parseCond sexp)
@@ -53,6 +54,10 @@
 (define parseLet*
     (lambda (sexp)
             (cadr (evalLet* sexp))))
+
+(define parseLetrec
+    (lambda (sexp)
+            (cadr (evalLetrec sexp))))
             
 (define parseQuasiquote
     (lambda (sexp)
@@ -282,7 +287,32 @@
                     `(#t ,(parse `(if ,test (begin ,@dit) (cond ,@(cdr args))))))))))           
                      
                 
-                
+(define evalLetrec
+    (lambda (s)
+       (if (not (and (list? s) (equal? (car s) 'letrec)))
+            '(#f #f)
+            (let*
+                ((bindings (cadr s))
+                (params (map car bindings))
+                ; (values (map (cadr bindings)))
+                (new-bindings (map (lambda (p) (cons p (list #f))) params))
+                (set!s (map (lambda (bind) (cons 'set! bind)) bindings))
+                (body (cddr s)))
+                (display '**************)
+                (newline)
+                (display `(bindings ,bindings))
+                (newline)
+                (display `(params ,params))
+                (newline)
+                (display `(new-bindings ,new-bindings))
+                (newline)
+                (display `(set!s ,set!s))
+                (newline)
+                (display `(body ,body))
+                (newline)
+                (display '**************)
+                ; `(#t ,(parse `(let ,new-bindings ,@(append set!s body))))))))
+                `(#t ,(parse `(let ,new-bindings ,@(append set!s `(lambda () ,body)))))))))
                 
                 
 (define parse-2 parse)
