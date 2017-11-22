@@ -10,6 +10,7 @@
             (parseLambda sexp)
             (parser evalDefine sexp 'define)
             (parser evalAssignment sexp 'set)
+            (parser evalApplic sexp 'applic)
             )))
 
 (define parseLambda
@@ -144,7 +145,18 @@
                     `(#t (var ,name) ,(parse (car exps)))
                     '(#f #f))))))                
                 
-                
+(define evalApplic
+    (lambda (s)
+        (if (or (not (list? s)) (reserved-word? (car s)))
+            '(#f #f)
+            (let*
+                ((first (car s))
+                (rest (cdr s))
+                (parsed-rest (if (null? rest) 
+                                '() 
+                                (map parse rest))))
+                `(#t ,(parse first) ,parsed-rest)))))
+
                 
                 
                 
