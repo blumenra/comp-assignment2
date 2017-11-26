@@ -5,14 +5,13 @@
     (lambda (sexp)
         (or
             (parseConst sexp)
-            (parser evalVar sexp 'var)
-            (parser evalIf sexp 'if3)
+            (parseVar sexp)
+            (parseIf sexp)
             (parseOr sexp)
             (parseLambda sexp)
-            ;(parser evalDefine sexp 'def)
-            (parser evalDefine sexp 'define)
-            (parser evalAssignment sexp 'set)
-            (parser evalApplic sexp 'applic)
+            (parseDefine sexp)
+            (parseAssignment sexp)
+            (parseApplic sexp)
             (parseBegin sexp)
             (parseLet sexp)
             (parseLet* sexp)
@@ -22,24 +21,44 @@
             (parseCond sexp)
             )))
 
-(define parseLambda
-    (lambda (sexp)
-        (or
-            (parser eval-variadic-lambda sexp 'lambda-opt)
-            ;(parser eval-variadic-lambda sexp 'lambda-var)
-            (parser eval-simple-lambda sexp 'lambda-simple)
-            (parser eval-optional-args sexp 'lambda-opt)
-            )))
+
             
 (define parseConst
     (lambda (sexp)
         (parser evalConst sexp 'const)))
+
+(define parseVar
+    (lambda (sexp)
+       (parser evalVar sexp 'var)))
+    
+(define parseIf
+    (lambda (sexp)
+      (parser evalIf sexp 'if3)))
         
 (define parseOr
     (lambda (sexp)
         (if (and (list? sexp) (< (length sexp) 3))
             (cadr (evalOr sexp))
             (parser evalOr sexp 'or))))
+            
+(define parseLambda
+    (lambda (sexp)
+        (or
+            (parser eval-variadic-lambda sexp 'lambda-opt)
+            (parser eval-simple-lambda sexp 'lambda-simple)
+            (parser eval-optional-args sexp 'lambda-opt))))
+            
+(define parseDefine
+    (lambda (sexp)
+        (parser evalDefine sexp 'define)))
+        
+(define parseAssignment
+    (lambda (sexp)
+        (parser evalAssignment sexp 'set)))
+        
+(define parseApplic
+    (lambda (sexp)
+        (parser evalApplic sexp 'applic)))
             
 (define parseBegin
     (lambda (sexp)
@@ -144,7 +163,7 @@
                 (if 
                     (not (symbol? args))
                     '(#f #f)
-                    `(#t () args ,(parse `(begin ,@exps))))))))
+                    `(#t () ,args ,(parse `(begin ,@exps))))))))
 
 (define eval-simple-lambda
     (lambda (s)
@@ -169,7 +188,9 @@
                     (reversed-list (reverse (flatten args)))
                     (rest (car reversed-list))
                     (proper-args (reverse (cdr reversed-list))))
-                    `(#t ,proper-args ,rest ,(parse `(begin ,@exps))))))))
+                    (if (null? proper-args) 
+                        '(#f #f)
+                        `(#t ,proper-args ,rest ,(parse `(begin ,@exps)))))))))
                         
 (define evalDefine
     (lambda (s)
@@ -179,7 +200,7 @@
             ((name (cadr s))
             (exps (cddr s)))
             (cond 
-                ((symbol? name) `(#t (var ,name) ,(parse (car exps))))
+                ((symbol? name) `(#t (var ,name) ,(parse `(begin ,@exps))))
                 ((and (pair? name) (not (null? name))) `(#t (var ,(car name)) ,(parse `(lambda ,(cdr name) ,@exps))))
                 (else '(#f #f))
                 )))))
@@ -220,42 +241,6 @@
                                     (parse first) 
                                     (map parse (cdr s)))))
                     `(#t ,parsed-rest))))))
-                    
-(define helpFunc
-    (lambda (lst)
-    (display lst)
-    (newline)
-        (cond 
-        ((null? lst) '())
-        ;((not (list? lst)) lst)
-        ((and (list? lst) (equal? (car lst) 'begin))
-            (cdr lst))
-            (else lst))))
-        ;((and (list? (car lst)) (equal? (caar lst) 'begin))
-         ;   (append (helpFunc (cdar lst)) (helpFunc (cdr lst)))
-          ;  (helpFunc (cdr lst)))
-        
-            
-         ;)))
-            
-    
-    
-(define evalBeginNew
-    (lambda (s)
-        (if (not (and (list? s) (equal? (car s) 'begin)))
-            '(#f #f)
-            (if (null? (cdr s))
-                `(#t ,(parse (void)))
-            (let*
-                    ((first (cadr s))
-                    (rest (cddr s)))
-                    (if (null? rest)
-                    
-                            `(#t ,(parse first))
-                           ((display (map helpFunc (cdr s)))
-                            ;`(#t #t)))))))
-                            `(#t ,(map parse (helpFunc(cdr s))))))))))  ) 
-                    
 
 (define evalLet
     (lambda (s)
@@ -263,7 +248,6 @@
             '(#f #f)
             (let*
                 ((bindings (cadr s))
-                
                 (body (cddr s))
                 (display bindings)
                 (display body)
@@ -319,7 +303,6 @@
                     (if (not (eq? test 'else))
                         `(#t ,(parse `(if ,test (begin ,@dit) ,(void))))
                         `(#t ,(parse `(begin ,@dit))))
-                     
                     `(#t ,(parse `(if ,test (begin ,@dit) (cond ,@(cdr args))))))))))           
                      
                 
