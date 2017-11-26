@@ -275,7 +275,7 @@
 									(map helpFunc1 (cdr s)))))
 									;(map append (map helpFunc (cdr s))))))
 					
-                    `(#t ,@parsed-rest))))))
+                    `(#t ,parsed-rest))))))
 
 (define evalLet
     (lambda (s)
