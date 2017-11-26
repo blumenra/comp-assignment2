@@ -50,7 +50,8 @@
             
 (define parseDefine
     (lambda (sexp)
-        (parser evalDefine sexp 'define)))
+        ;(parser evalDefine sexp 'define)
+		(parser evalDefine sexp 'def)))
         
 (define parseAssignment
     (lambda (sexp)
@@ -63,8 +64,8 @@
 (define parseBegin
     (lambda (sexp)
         (if (and (list? sexp) (> 3 (length sexp)))
-            (cadr (evalBegin sexp))
-            (parser evalBegin sexp 'seq))))
+            (cadr (evalBeginNew sexp))
+            (parser evalBeginNew sexp 'seq))))
 
 (define parseLet
     (lambda (sexp)
@@ -240,6 +241,40 @@
                     (parsed-rest (if (null? rest) 
                                     (parse first) 
                                     (map parse (cdr s)))))
+                    `(#t ,parsed-rest))))))
+					
+(define helpFunc
+	(lambda (l)
+		(if (and (list? l) (not (null? l)))
+			(if (equal? (car l) 'begin)
+				(cons (cadr l) (if (list? (caddr l))
+									(helpFunc (caddr l))
+									(helpFunc (cddr l))))
+				l)
+			l)))					
+(define helpFunc1
+	(lambda (ls)
+		(let 
+			((ans (helpFunc ls)))
+			(if (and (list? ls) (equal? (car ls) 'begin))
+				(map parse ans)
+				(parse ans)))))
+			
+			
+(define evalBeginNew
+    (lambda (s)
+        (if (not (and (list? s) (equal? (car s) 'begin)))
+            '(#f #f)
+            (if (null? (cdr s))
+                `(#t ,(parse (void)))
+                (let*
+                    ((first (cadr s))
+                    (rest (cddr s))
+                    (parsed-rest (if (null? rest) 
+                                    (parse first) 
+									(map helpFunc1 (cdr s)))))
+									;(map append (map helpFunc (cdr s))))))
+					
                     `(#t ,parsed-rest))))))
 
 (define evalLet
