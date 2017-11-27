@@ -234,18 +234,18 @@
     (lambda (tag)
         (lambda (exp)
             (and
-                (list? exp) 
-                (not (null? exp))
-                (equal? (car exp) tag)))))
+                (list? exp)                 ;is list
+                (not (null? exp))           ;not empty list
+                (equal? (car exp) tag)))))  ;its tag is value(tag)
 
 (define non-empty-seq? (make-non-empty-sexp-pred 'seq))
 
 (define helpFunc1
 	(lambda (currList exp)
         (let* ((parsed-exp (parse exp))
-                (ret (if (not (non-empty-seq? parsed-exp))
-                            (list parsed-exp)
-                            (cadr parsed-exp))))
+                (ret (if (non-empty-seq? parsed-exp);if not (seq '())
+                            (cadr parsed-exp)       ;((var x) (var y))
+                            (list parsed-exp))))    ;((var z))
                     (append currList ret))))
 			
 			
@@ -270,8 +270,6 @@
             (let*
                 ((bindings (cadr s))
                 (body (cddr s))
-                (display bindings)
-                (display body)
                 (params (map car bindings))
                 (values (map cadr bindings)))
                 `(#t ,(parse `((lambda ,params ,@body) ,@values)))))))
