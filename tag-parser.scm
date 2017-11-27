@@ -97,6 +97,23 @@
         (cond ((null? x) '())
                 ((pair? x) (append (flatten (car x)) (flatten (cdr x))))
                 (else (list x)))))
+
+
+(define make-check-double
+    (lambda (lst)
+        (lambda (sym)
+            (let* ((match (member sym lst))
+                    (rest (if match
+                                (cdr match)
+                                #f)))
+              (if (or (not rest) (not (member sym rest)))
+                #f
+                #t)))))
+
+(define check-double-in-list
+    (lambda (lst)
+        (member #t (map (make-check-double lst) lst))))
+
                 
 (define parser
    (lambda (evaluator sexp tag) 
@@ -172,10 +189,16 @@
             '(#f #f)
             (if (not (list? (cadr s)))
                 '(#f #f)
-                (let
+                (let*
                     ((args (cadr s))
-                    (exps (cddr s)))
-                    `(#t ,args ,(parse `(begin ,@exps))))))))
+                    (exps (cddr s))
+                    (multi-paramed (if (null? args)
+                                        #f
+                                        (check-double-in-list args))))
+                    (if multi-paramed
+                        (error 'parser "Invalid params: " args)
+                        `(#t ,args ,(parse `(begin ,@exps)))))))))
+                        
 
 (define eval-optional-args
      (lambda (s)
@@ -263,6 +286,7 @@
 									(fold-left helpFunc1 '() (cdr s)))))
                     `(#t ,parsed-rest))))))
 
+
 (define evalLet
     (lambda (s)
        (if (not (and (list? s) (equal? (car s) 'let)))
@@ -273,6 +297,7 @@
                 (params (map car bindings))
                 (values (map cadr bindings)))
                 `(#t ,(parse `((lambda ,params ,@body) ,@values)))))))
+                
                 
 (define evalLet*
     (lambda (s)
