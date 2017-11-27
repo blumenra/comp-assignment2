@@ -27,20 +27,24 @@
     (lambda (sexp)
         (parser evalConst sexp 'const)))
 
+
 (define parseVar
     (lambda (sexp)
        (parser evalVar sexp 'var)))
     
+
 (define parseIf
     (lambda (sexp)
       (parser evalIf sexp 'if3)))
         
+
 (define parseOr
     (lambda (sexp)
         (if (and (list? sexp) (< (length sexp) 3))
             (cadr (evalOr sexp))
             (parser evalOr sexp 'or))))
             
+
 (define parseLambda
     (lambda (sexp)
         (or
@@ -48,45 +52,55 @@
             (parser eval-simple-lambda sexp 'lambda-simple)
             (parser eval-optional-args sexp 'lambda-opt))))
             
+
 (define parseDefine
     (lambda (sexp)
-        (parser evalDefine sexp 'define)))
-		; (parser evalDefine sexp 'def)))
+        ; (parser evalDefine sexp 'define)))
+		(parser evalDefine sexp 'def)))
         
+
 (define parseAssignment
     (lambda (sexp)
         (parser evalAssignment sexp 'set)))
         
+
 (define parseApplic
     (lambda (sexp)
         (parser evalApplic sexp 'applic)))
             
+
 (define parseBegin
     (lambda (sexp)
         (if (and (list? sexp) (> 3 (length sexp)))
             (cadr (evalBegin sexp))
             (parser evalBegin sexp 'seq))))
 
+
 (define parseLet
     (lambda (sexp)
             (cadr (evalLet sexp))))
+
 
 (define parseLet*
     (lambda (sexp)
             (cadr (evalLet* sexp))))
 
+
 (define parseLetrec
     (lambda (sexp)
             (cadr (evalLetrec sexp))))
             
+
 (define parseQuasiquote
     (lambda (sexp)
             (cadr (evalQuasiquote sexp))))
+
 
 (define parseAnd
     (lambda (sexp)
         (if (list? sexp) (cadr (evalAnd sexp)) #f)))
         
+
 (define parseCond
     (lambda (sexp)
         (if (list? sexp) (cadr (evalCond sexp)) #f)))
@@ -106,9 +120,10 @@
                     (rest (if match
                                 (cdr match)
                                 #f)))
-              (if (or (not rest) (not (member sym rest)))
-                #f
-                #t)))))
+                  (if (or (not rest) (not (member sym rest)))
+                    #f
+                    #t)))))
+
 
 (define check-double-in-list
     (lambda (lst)
@@ -122,15 +137,18 @@
             (val (cdr lst)))
             (if bool `(,tag ,@val) #f)))) 
             
+
 (define *reserved-words*
     '(and begin cond define do else if lambda
     let let* letrec or quasiquote unquote
     unquote-splicing quote set!))
     
+
 (define reserved-word?
     (lambda (word)
         (ormap (lambda (res-word) (equal? word res-word))
                 *reserved-words*)))
+
 
 (define evalConst
     (lambda (c)
@@ -142,6 +160,7 @@
             ((eq? (void) c) `(#t ,c))
             (else '(#f #f)))))
 
+
 (define evalVar
     (lambda (v)
         (if 
@@ -149,6 +168,7 @@
             `(#t ,v) 
             '(#f #f))))
         
+
 (define evalIf
     (lambda (s)
         (if (not (and (list? s) (equal? (car s) 'if)))
@@ -160,6 +180,7 @@
                 (ret-dif (if (null? dif) (void) (car dif))))
                  `(#t ,(parse test) ,(parse dit) ,(parse ret-dif))))))
                 
+
 (define evalOr
     (lambda (s)
         (if (not (and (list? s) (equal? (car s) 'or)))
@@ -171,6 +192,7 @@
                     ((= 1 (length args)) `(#t ,(parse (car args))))
                     (else `(#t ,(map parse (cdr s)))))))))
                 
+
 (define eval-variadic-lambda
     (lambda (s)
        (if (not (and (list? s) (equal? (car s) 'lambda)))
@@ -182,6 +204,7 @@
                     (not (symbol? args))
                     '(#f #f)
                     `(#t () ,args ,(parse `(begin ,@exps))))))))
+
 
 (define eval-simple-lambda
     (lambda (s)
@@ -216,6 +239,7 @@
                         '(#f #f)
                         `(#t ,proper-args ,rest ,(parse `(begin ,@exps)))))))))
                         
+
 (define evalDefine
     (lambda (s)
         (if (not (and (list? s) (equal? (car s) 'define)))
@@ -229,6 +253,7 @@
                 (else '(#f #f))
                 )))))
                 
+
 (define evalAssignment
     (lambda (s)
         (if (not (and (list? s) (equal? (car s) 'set!)))
@@ -240,6 +265,7 @@
                     `(#t (var ,name) ,(parse (car exps)))
                     '(#f #f))))))                
                 
+
 (define evalApplic
     (lambda (s)
         (if (or (not (list? s)) (reserved-word? (car s)))
@@ -261,7 +287,9 @@
                 (not (null? exp))           ;not empty list
                 (equal? (car exp) tag)))))  ;its tag is value(tag)
 
+
 (define non-empty-seq? (make-non-empty-sexp-pred 'seq))
+
 
 (define helpFunc1
 	(lambda (currList exp)
@@ -334,6 +362,7 @@
                     (else 
                     `(#t ,(parse `(if ,(cadr s) (and ,@(cdr args)) #f)))))))))              
                 
+
 (define evalCond
     (lambda (s)
         (if (not (and (list? s) (equal? (car s) 'cond)))
