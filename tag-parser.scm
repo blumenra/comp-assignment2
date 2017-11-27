@@ -64,8 +64,8 @@
 (define parseBegin
     (lambda (sexp)
         (if (and (list? sexp) (> 3 (length sexp)))
-            (cadr (evalBeginNew sexp))
-            (parser evalBeginNew sexp 'seq))))
+            (cadr (evalBegin sexp))
+            (parser evalBegin sexp 'seq))))
 
 (define parseLet
     (lambda (sexp)
@@ -229,6 +229,26 @@
                                 (map parse rest))))
                 `(#t ,(parse first) ,parsed-rest)))))
 
+
+(define make-non-empty-sexp-pred
+    (lambda (tag)
+        (lambda (exp)
+            (and
+                (list? exp) 
+                (not (null? exp))
+                (equal? (car exp) tag)))))
+
+(define non-empty-seq? (make-non-empty-sexp-pred 'seq))
+
+(define helpFunc1
+	(lambda (currList exp)
+        (let* ((parsed-exp (parse exp))
+                (ret (if (not (non-empty-seq? parsed-exp))
+                            (list parsed-exp)
+                            (cadr parsed-exp))))
+                    (append currList ret))))
+			
+			
 (define evalBegin
     (lambda (s)
         (if (not (and (list? s) (equal? (car s) 'begin)))
@@ -240,109 +260,7 @@
                     (rest (cddr s))
                     (parsed-rest (if (null? rest) 
                                     (parse first) 
-                                    (map parse (cdr s)))))
-                    `(#t ,parsed-rest))))))
-					
-; (define helpFunc
-; 	(lambda (l)
-; 		(if (and (list? l) (not (null? l)))
-; 			(if (equal? (car l) 'begin)
-; 				(cons (cadr l) (if (list? (caddr l))
-; 									(helpFunc (caddr l))
-; 									(helpFunc (cddr l))))
-; 				l)
-; 			l)))	
-
-(define make-non-empty-sexp-pred
-    (lambda (tag)
-        (lambda (exp)
-            (and
-                (list? exp) 
-                (not (null? exp))
-                (equal? (car exp) tag)))))
-
-(define non-empty-begin? (make-non-empty-sexp-pred 'begin))
-(define non-empty-seq? (make-non-empty-sexp-pred 'seq))
-
-; (define seq?
-;     (lambda (parsed-exp)
-;         (and
-;             (list? parsed-exp)
-;             (not (null? parsed-exp))
-;             (equal? (car parsed-exp) 'seq))))
-
-; (define nested-define-parse
-;     (lambda (exp)
-;         (let ((parsed-exp (parse exp)))
-;             (newline)
-;             (display `(parsed-exp ,parsed-exp))
-;             (newline)
-;             (if (non-empty-seq? parsed-exp)
-;                 (cdr parsed-exp)
-;                 parsed-exp))))
-
-; (define helpFunc2
-;     (lambda (currList exp)
-;         (append currList (nested-define-parse exp))))
-
-(define helpFunc1
-	(lambda (currList exp)
-        (let* ((parsed-exp (parse exp))
-                ; (f (if (null? currList)
-                ;         append
-                ;         list)))
-                (ret (if (not (non-empty-seq? parsed-exp))
-                            (list parsed-exp)
-                            (cadr parsed-exp))))
-                ; (ret (if (non-empty-seq? parsed-exp)
-                ;                 (cdr parsed-exp)
-                ;                 parsed-exp)))
-                ; (final-ret (if (equal? (car first-ret) 'seq)
-                ;                 (cadr first-ret)
-                ;                 first-ret)))
-                ; (display `(exp ,exp))
-                ; (newline)
-                ; (display `((cdr parsed-exp) ,(cdr parsed-exp)))
-                ; (newline)
-                ; (display `(currList ,currList))
-                ; (newline)
-                ; (display `((fold-left cons currList (cdr parsed-exp)) ,(fold-left cons currList (cdr parsed-exp))))
-                ; (newline)
-                ; (if (non-empty-seq? parsed-exp)
-                    ; (append currList (cdr parsed-exp))
-                    (append currList ret))))
-                    ; `(append ,currList ,ret))))
-                    ; `(,f ,currList ,(cdr parsed-exp))
-                    ; (f currList parsed-exp)))))
-                    ; `(,f ,currList ,parsed-exp)))))
-        
-            ; (append currList )
-            ; (append currList (list )))))
-
-            ; (map parse (cdr lst))
-
-		; (let 
-		; 	((ans (helpFunc ls)))
-		; 	(if (and (list? ls) (equal? (car ls) 'begin))
-		; 		(map parse ans)
-		; 		(parse ans)))))
-			
-			
-(define evalBeginNew
-    (lambda (s)
-        (if (not (and (list? s) (equal? (car s) 'begin)))
-            '(#f #f)
-            (if (null? (cdr s))
-                `(#t ,(parse (void)))
-                (let*
-                    ((first (cadr s))
-                    (rest (cddr s))
-                    (parsed-rest (if (null? rest) 
-                                    (parse first) 
 									(fold-left helpFunc1 '() (cdr s)))))
-									;(map append (map helpFunc (cdr s))))))
-					; (display `(parsed-rest ,parsed-rest))
-     ;                (newline)
                     `(#t ,parsed-rest))))))
 
 (define evalLet
