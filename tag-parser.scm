@@ -55,8 +55,8 @@
 
 (define parseDefine
     (lambda (sexp)
-        ; (parser evalDefine sexp 'define)))
-		(parser evalDefine sexp 'def)))
+        (parser evalDefine sexp 'define)))
+		; (parser evalDefine sexp 'def)))
         
 
 (define parseAssignment
@@ -392,4 +392,4 @@
                 `(#t ,(parse `(let ,new-bindings ,@(append set!s (list (list `(lambda () ,@body)))))))))))
                 
                 
-(define parse-2 parse)
+; (define parse-2 parse)
