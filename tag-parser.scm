@@ -50,8 +50,8 @@
             
 (define parseDefine
     (lambda (sexp)
-        ;(parser evalDefine sexp 'define)
-		(parser evalDefine sexp 'def)))
+        (parser evalDefine sexp 'define)
+		; (parser evalDefine sexp 'def)))
         
 (define parseAssignment
     (lambda (sexp)
